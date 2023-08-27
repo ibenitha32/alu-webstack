@@ -1,0 +1,20 @@
+frontend www-http
+        bind *:80
+        mode http
+        default_backend web-backend
+
+frontend www-https
+        bind *:433 crt /etc/letsencrypt/live/www.therealdidas.tech/fullchain.pem
+        http-request set-header X-Forwarded-Proto https
+        acl letsencrypt-acl path_beg /.well-known/acme-challenge/
+        use_backend letsencrypt-backend if letsencrypt-acl
+        default_backend web-backend
+
+backend web-backend
+        redirect scheme https unless { ssl_fc }
+        balance roundrobin
+        server 5733-web-01 54.87.113.222:80 check
+        server 5733-web-02 3.85.212.218:80 check
+backend letsencrypt-backend
+        server letsencrypt 127.0.0.1:54321
+

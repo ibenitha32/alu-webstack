@@ -1,0 +1,18 @@
+frontend www-http
+    bind *:80
+    mode http
+    default_backend web-backend
+frontend www-https
+    bind *:443 ssl crt /etc/haproxy/thevicky.tech.pem
+    http-request set-header X-Forwarded-Proto https
+    acl letsencrypt-acl path_beg /.well-known/acme-challenge/
+    use_backend letsencrypt-backend if letsencrypt-acl
+    default_backend web-backend
+
+backend web-backend
+    redirect scheme https unless { ssl_fc }
+    balance roundrobin
+    server 5440-web-01 54.87.131.19:80 check
+    server 5440-web-02 54.243.20.112:80 check
+backend letsencrypt-backend
+   server letsencrypt 127.0.0.1:54321
